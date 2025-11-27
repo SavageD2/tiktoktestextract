@@ -112,22 +112,15 @@ app.post('/api/extract', async (req, res) => {
     try {
         const { url } = req.body;
 
-        if (!url || !url.includes('tiktok.com')) {
+        if (!url || (!url.includes('tiktok.com') && !url.includes('vm.tiktok'))) {
             return res.status(400).json({
                 success: false,
                 error: 'URL TikTok invalide'
             });
         }
 
-        // Extraire l'ID de la vidéo de l'URL
-        const videoId = extractVideoId(url);
-
-        if (!videoId) {
-            return res.status(400).json({
-                success: false,
-                error: 'Impossible d\'extraire l\'ID de la vidéo'
-            });
-        }
+        // Ne pas extraire l'ID maintenant - laisser l'API gérer les redirections
+        // L'ID sera extrait de la réponse API ou de l'URL finale
 
         // Utilisation de RapidAPI pour l'extraction réelle
         let videoData;
@@ -149,11 +142,17 @@ app.post('/api/extract', async (req, res) => {
                 const response = await axios.request(options);
                 const apiData = response.data;
                 
+                // Extraire l'ID après résolution par l'API
+                const resolvedVideoId = apiData.data?.id || 
+                                       apiData.id || 
+                                       extractVideoId(apiData.data?.video_url || url) || 
+                                       'unknown';
+                
                 // Adapter la réponse de l'API au format attendu
                 videoData = {
                     success: true,
-                    videoId: videoId,
-                    url: url,
+                    videoId: resolvedVideoId,
+                    url: apiData.data?.video_url || url,
                     title: apiData.data?.title || apiData.title || 'Vidéo TikTok',
                     author: apiData.data?.author?.nickname || apiData.author || '@utilisateur',
                     description: apiData.data?.desc || apiData.description || 'Description non disponible',
@@ -168,9 +167,10 @@ app.post('/api/extract', async (req, res) => {
             } catch (apiError) {
                 console.error('Erreur RapidAPI:', apiError.message);
                 // Fallback vers données simulées si l'API échoue
+                const fallbackVideoId = extractVideoId(url) || 'temp_' + Date.now();
                 videoData = {
                     success: true,
-                    videoId: videoId,
+                    videoId: fallbackVideoId,
                     url: url,
                     title: 'Vidéo TikTok',
                     author: '@utilisateur',
@@ -187,9 +187,10 @@ app.post('/api/extract', async (req, res) => {
             }
         } else {
             // Mode démo sans clé API
+            const demoVideoId = extractVideoId(url) || 'demo_' + Date.now();
             videoData = {
                 success: true,
-                videoId: videoId,
+                videoId: demoVideoId,
                 url: url,
                 title: 'Vidéo TikTok (Mode Démo)',
                 author: '@utilisateur',
@@ -207,7 +208,7 @@ app.post('/api/extract', async (req, res) => {
         // Ajouter à l'historique
         extractionHistory.unshift({
             url: url,
-            videoId: videoId,
+            videoId: videoData.videoId,
             timestamp: new Date().toISOString(),
             success: true
         });
@@ -237,26 +238,20 @@ app.get('/api/history', (req, res) => {
 });
 
 // Fonction pour extraire l'ID de la vidéo de l'URL TikTok
+// Note: Cette fonction fonctionne uniquement pour les URLs standard
+// Les liens courts (vm.tiktok.com) doivent être résolus par l'API
 function extractVideoId(url) {
     try {
-        // Formats possibles:
-        // https://www.tiktok.com/@username/video/1234567890123456789
-        // https://vm.tiktok.com/ABC123/
-        // https://www.tiktok.com/t/ABC123/
-
-        const patterns = [
-            /\/video\/(\d+)/,           // Format standard
-            /vm\.tiktok\.com\/([A-Za-z0-9]+)/,  // Format court
-            /\/t\/([A-Za-z0-9]+)/       // Format t/
-        ];
-
-        for (const pattern of patterns) {
-            const match = url.match(pattern);
-            if (match && match[1]) {
-                return match[1];
-            }
+        if (!url) return null;
+        
+        // Format standard uniquement: https://www.tiktok.com/@username/video/1234567890123456789
+        const standardMatch = url.match(/\/video\/(\d+)/);
+        if (standardMatch && standardMatch[1]) {
+            return standardMatch[1];
         }
 
+        // Pour les autres formats, retourner null
+        // L'API RapidAPI gérera la résolution des liens courts
         return null;
     } catch (error) {
         console.error('Erreur lors de l\'extraction de l\'ID:', error);
