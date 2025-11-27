@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suppression des Données - VidGrasp</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .legal-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: white;
+            border-radius: 20px;
+            margin-top: 20px;
+        }
+        .legal-content {
+            line-height: 1.8;
+            color: #333;
+        }
+        .legal-content h2 {
+            color: #fe2c55;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        .legal-content h3 {
+            color: #333;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .legal-content p {
+            margin-bottom: 15px;
+        }
+        .legal-content ul {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #fe2c55;
+            text-decoration: none;
+            font-weight: bold;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .delete-form {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .submit-btn {
+            background: linear-gradient(135deg, #fe2c55 0%, #ff6b9d 100%);
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(254, 44, 85, 0.4);
+        }
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .success-message {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="legal-container">
+        <a href="/" class="back-link">← Retour à l'accueil</a>
+        
+        <h1>🗑️ Suppression de vos données</h1>
+        <p><em>VidGrasp - Politique de suppression des données</em></p>
+
+        <div class="legal-content">
+            <div class="info-box">
+                <strong>ℹ️ Information importante :</strong>
+                <p style="margin-top: 10px; margin-bottom: 0;">
+                    VidGrasp respecte votre droit à la vie privée et à la suppression de vos données personnelles. 
+                    Utilisez ce formulaire pour demander la suppression de toutes vos données associées à votre compte.
+                </p>
+            </div>
+
+            <h2>Vos droits</h2>
+            <p>Conformément au RGPD et autres réglementations sur la protection des données, vous avez le droit de :</p>
+            <ul>
+                <li>Demander la suppression complète de vos données personnelles</li>
+                <li>Retirer votre consentement au traitement de vos données</li>
+                <li>Recevoir une confirmation de suppression sous 30 jours</li>
+                <li>Recevoir une copie de vos données avant suppression</li>
+            </ul>
+
+            <h2>Quelles données seront supprimées ?</h2>
+            <ul>
+                <li>Informations de compte (email, nom d'utilisateur)</li>
+                <li>Historique d'extraction de vidéos</li>
+                <li>Données d'utilisation et préférences</li>
+                <li>Tokens d'authentification Facebook/TikTok</li>
+                <li>Toutes autres données personnelles collectées</li>
+            </ul>
+
+            <h2>Délai de traitement</h2>
+            <p>
+                Votre demande sera traitée dans un délai maximum de <strong>30 jours</strong>. 
+                Vous recevrez une confirmation par email une fois la suppression effectuée.
+            </p>
+
+            <h2>Formulaire de demande de suppression</h2>
+            
+            <div class="delete-form">
+                <form id="deletionForm">
+                    <div class="form-group">
+                        <label for="email">Email associé au compte *</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            required 
+                            placeholder="votre@email.com"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="userId">ID Utilisateur Facebook/TikTok (si applicable)</label>
+                        <input 
+                            type="text" 
+                            id="userId" 
+                            name="userId" 
+                            placeholder="Votre ID utilisateur"
+                        />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reason">Raison de la suppression (optionnel)</label>
+                        <textarea 
+                            id="reason" 
+                            name="reason" 
+                            placeholder="Pourquoi souhaitez-vous supprimer vos données ?"
+                        ></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="confirm" required style="width: auto; margin-right: 8px;">
+                            Je confirme vouloir supprimer définitivement toutes mes données
+                        </label>
+                    </div>
+
+                    <button type="submit" class="submit-btn">
+                        🗑️ Demander la suppression de mes données
+                    </button>
+                </form>
+
+                <div id="successMessage" class="success-message">
+                    ✅ Votre demande a été enregistrée. Vous recevrez un email de confirmation sous 24-48 heures.
+                </div>
+            </div>
+
+            <h2>Contact</h2>
+            <p>
+                Pour toute question concernant la suppression de vos données ou notre politique de confidentialité, 
+                contactez-nous :
+            </p>
+            <p>
+                <strong>Email :</strong> privacy@vidgrasp.xyz<br>
+                <strong>Site :</strong> https://vidgrasp.xyz
+            </p>
+
+            <h2>Note pour les utilisateurs Facebook</h2>
+            <p>
+                Si vous avez utilisé VidGrasp via Facebook Login, la suppression de vos données dans notre système 
+                est indépendante de votre compte Facebook. Pour supprimer les données partagées avec VidGrasp depuis 
+                Facebook, vous pouvez également gérer vos applications connectées dans les paramètres de votre compte Facebook.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('deletionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                email: document.getElementById('email').value,
+                userId: document.getElementById('userId').value,
+                reason: document.getElementById('reason').value,
+                timestamp: new Date().toISOString()
+            };
+
+            try {
+                const response = await fetch('/api/data-deletion-request', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    document.getElementById('deletionForm').style.display = 'none';
+                    document.getElementById('successMessage').style.display = 'block';
+                } else {
+                    alert('Une erreur est survenue. Veuillez réessayer ou nous contacter directement.');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Une erreur est survenue. Veuillez nous contacter à privacy@vidgrasp.xyz');
+            }
+        });
+    </script>
+</body>
+</html>
