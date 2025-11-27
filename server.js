@@ -107,6 +107,106 @@ app.get('/auth/tiktok/callback', async (req, res) => {
     }
 });
 
+// API pour extraire les vidéos d'un créateur TikTok
+app.post('/api/extract-user', async (req, res) => {
+    try {
+        const { username } = req.body;
+
+        if (!username) {
+            return res.status(400).json({
+                success: false,
+                error: 'Nom d\'utilisateur requis'
+            });
+        }
+
+        // Nettoyer le username (enlever @ si présent)
+        const cleanUsername = username.replace('@', '').trim();
+
+        if (process.env.RAPIDAPI_KEY) {
+            try {
+                const options = {
+                    method: 'GET',
+                    url: 'https://tiktok-download-video1.p.rapidapi.com/getUserVideos',
+                    params: { 
+                        username: cleanUsername,
+                        count: 30 // Nombre de vidéos à récupérer
+                    },
+                    headers: {
+                        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+                        'X-RapidAPI-Host': process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'
+                    },
+                    timeout: 15000
+                };
+
+                const response = await axios.request(options);
+                const apiData = response.data;
+                
+                // Adapter la réponse selon le format de l'API
+                const videos = apiData.data?.videos || apiData.videos || [];
+                
+                const formattedVideos = videos.map(video => ({
+                    videoId: video.video_id || video.id,
+                    url: video.video_url || `https://www.tiktok.com/@${cleanUsername}/video/${video.video_id}`,
+                    title: video.title || video.desc || 'Sans titre',
+                    description: video.desc || video.description || '',
+                    thumbnail: video.cover || video.thumbnail,
+                    downloadUrl: video.play || video.download_url,
+                    duration: video.duration,
+                    likes: video.digg_count || video.likes || 0,
+                    comments: video.comment_count || video.comments || 0,
+                    shares: video.share_count || video.shares || 0,
+                    views: video.play_count || video.views || 0,
+                    createTime: video.create_time
+                }));
+
+                res.json({
+                    success: true,
+                    username: cleanUsername,
+                    count: formattedVideos.length,
+                    videos: formattedVideos
+                });
+
+            } catch (apiError) {
+                console.error('Erreur RapidAPI User:', apiError.message);
+                res.status(500).json({
+                    success: false,
+                    error: 'Erreur lors de la récupération des vidéos: ' + apiError.message
+                });
+            }
+        } else {
+            // Mode démo
+            const demoVideos = Array.from({ length: 5 }, (_, i) => ({
+                videoId: `demo_${Date.now()}_${i}`,
+                url: `https://www.tiktok.com/@${cleanUsername}/video/demo${i}`,
+                title: `Vidéo démo ${i + 1}`,
+                description: 'Configurez RAPIDAPI_KEY pour voir les vraies vidéos',
+                thumbnail: `https://via.placeholder.com/300x400?text=Video+${i + 1}`,
+                downloadUrl: null,
+                duration: '00:30',
+                likes: Math.floor(Math.random() * 10000),
+                comments: Math.floor(Math.random() * 500),
+                shares: Math.floor(Math.random() * 200),
+                views: Math.floor(Math.random() * 50000)
+            }));
+
+            res.json({
+                success: true,
+                username: cleanUsername,
+                count: demoVideos.length,
+                videos: demoVideos,
+                demo: true
+            });
+        }
+
+    } catch (error) {
+        console.error('Erreur extraction user:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Erreur lors de l\'extraction: ' + error.message
+        });
+    }
+});
+
 // API pour extraire les informations d'une vidéo TikTok
 app.post('/api/extract', async (req, res) => {
     try {

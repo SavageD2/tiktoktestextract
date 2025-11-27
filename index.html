@@ -14,7 +14,12 @@
         </header>
 
         <main>
-            <div class="input-section">
+            <div class="mode-selector">
+                <button id="urlModeBtn" class="mode-btn active">📹 URL Unique</button>
+                <button id="userModeBtn" class="mode-btn">👤 Créateur</button>
+            </div>
+
+            <div class="input-section" id="urlMode">
                 <input 
                     type="text" 
                     id="tiktokUrl" 
@@ -24,9 +29,27 @@
                 <button id="extractBtn" class="extract-btn">Extraire la vidéo</button>
             </div>
 
+            <div class="input-section hidden" id="userMode">
+                <input 
+                    type="text" 
+                    id="tiktokUsername" 
+                    placeholder="Nom du créateur (ex: @username ou username)"
+                    class="url-input"
+                />
+                <button id="extractUserBtn" class="extract-btn">Extraire les vidéos</button>
+            </div>
+
             <div id="loading" class="loading hidden">
                 <div class="spinner"></div>
                 <p>Extraction en cours...</p>
+            </div>
+
+            <div id="userResults" class="user-results hidden">
+                <div class="user-header">
+                    <h2 id="userTitle"></h2>
+                    <p id="videoCount"></p>
+                </div>
+                <div id="videoGrid" class="video-grid"></div>
             </div>
 
             <div id="result" class="result hidden">

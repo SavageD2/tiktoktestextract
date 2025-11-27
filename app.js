@@ -1,18 +1,29 @@
 // Configuration de l'API
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = window.location.origin;
 
 // Éléments DOM
+const urlModeBtn = document.getElementById('urlModeBtn');
+const userModeBtn = document.getElementById('userModeBtn');
+const urlModeDiv = document.getElementById('urlMode');
+const userModeDiv = document.getElementById('userMode');
 const tiktokUrlInput = document.getElementById('tiktokUrl');
+const tiktokUsernameInput = document.getElementById('tiktokUsername');
 const extractBtn = document.getElementById('extractBtn');
+const extractUserBtn = document.getElementById('extractUserBtn');
 const loadingDiv = document.getElementById('loading');
 const resultDiv = document.getElementById('result');
+const userResultsDiv = document.getElementById('userResults');
 const errorDiv = document.getElementById('error');
 const errorMessage = document.getElementById('errorMessage');
 const videoInfoDiv = document.getElementById('videoInfo');
+const videoGridDiv = document.getElementById('videoGrid');
+const userTitleDiv = document.getElementById('userTitle');
+const videoCountDiv = document.getElementById('videoCount');
 const historyDiv = document.getElementById('history');
 
 // État de l'application
 let isExtracting = false;
+let currentMode = 'url'; // 'url' ou 'user'
 
 // Initialisation
 document.addEventListener('DOMContentLoaded', () => {
@@ -22,20 +33,125 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Configuration des écouteurs d'événements
 function setupEventListeners() {
-    extractBtn.addEventListener('click', handleExtract);
+    // Mode switchers
+    urlModeBtn.addEventListener('click', () => switchMode('url'));
+    userModeBtn.addEventListener('click', () => switchMode('user'));
     
+    // URL mode
+    extractBtn.addEventListener('click', handleExtract);
     tiktokUrlInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            handleExtract();
-        }
+        if (e.key === 'Enter') handleExtract();
     });
-
-    tiktokUrlInput.addEventListener('input', () => {
-        hideError();
+    tiktokUrlInput.addEventListener('input', () => hideError());
+    
+    // User mode
+    extractUserBtn.addEventListener('click', handleUserExtract);
+    tiktokUsernameInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleUserExtract();
     });
+    tiktokUsernameInput.addEventListener('input', () => hideError());
 }
 
-// Gérer l'extraction
+// Changer de mode
+function switchMode(mode) {
+    currentMode = mode;
+    hideError();
+    hideResult();
+    hideUserResults();
+    
+    if (mode === 'url') {
+        urlModeBtn.classList.add('active');
+        userModeBtn.classList.remove('active');
+        urlModeDiv.classList.remove('hidden');
+        userModeDiv.classList.add('hidden');
+    } else {
+        userModeBtn.classList.add('active');
+        urlModeBtn.classList.remove('active');
+        userModeDiv.classList.remove('hidden');
+        urlModeDiv.classList.add('hidden');
+    }
+}
+
+// Gérer l'extraction par username
+async function handleUserExtract() {
+    const username = tiktokUsernameInput.value.trim();
+
+    if (!username) {
+        showError('Veuillez entrer un nom d\'utilisateur');
+        return;
+    }
+
+    if (isExtracting) return;
+
+    try {
+        isExtracting = true;
+        showLoading();
+        hideError();
+        hideUserResults();
+
+        const response = await fetch(`${API_BASE_URL}/api/extract-user`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Erreur lors de l\'extraction');
+        }
+
+        displayUserVideos(data);
+
+    } catch (error) {
+        console.error('Erreur:', error);
+        showError(error.message || 'Une erreur est survenue lors de l\'extraction');
+    } finally {
+        isExtracting = false;
+        hideLoading();
+    }
+}
+
+// Afficher les vidéos d'un créateur
+function displayUserVideos(data) {
+    userTitleDiv.textContent = `@${data.username}`;
+    videoCountDiv.textContent = `${data.count} vidéo${data.count > 1 ? 's' : ''} trouvée${data.count > 1 ? 's' : ''}`;
+    
+    videoGridDiv.innerHTML = data.videos.map(video => `
+        <div class="video-card" onclick="window.open('${video.url}', '_blank')">
+            <img src="${video.thumbnail || 'https://via.placeholder.com/300x400?text=TikTok'}" 
+                 alt="${escapeHtml(video.title)}" 
+                 class="video-thumbnail"
+                 onerror="this.src='https://via.placeholder.com/300x400?text=TikTok'">
+            <div class="video-info-card">
+                <div class="video-title">${escapeHtml(video.title)}</div>
+                <div class="video-stats">
+                    <span class="video-stat">❤️ ${formatNumber(video.likes)}</span>
+                    <span class="video-stat">💬 ${formatNumber(video.comments)}</span>
+                    <span class="video-stat">🔄 ${formatNumber(video.shares)}</span>
+                </div>
+                ${video.downloadUrl ? `
+                    <button class="video-download-btn" onclick="event.stopPropagation(); window.open('${video.downloadUrl}', '_blank')">
+                        📥 Télécharger
+                    </button>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+    
+    showUserResults();
+}
+
+// Formater les nombres
+function formatNumber(num) {
+    if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+    return num.toString();
+}
+
+// Gérer l'extraction d'URL unique
 async function handleExtract() {
     const url = tiktokUrlInput.value.trim();
 
@@ -206,6 +322,14 @@ function showResult() {
 
 function hideResult() {
     resultDiv.classList.add('hidden');
+}
+
+function showUserResults() {
+    userResultsDiv.classList.remove('hidden');
+}
+
+function hideUserResults() {
+    userResultsDiv.classList.add('hidden');
 }
 
 function showError(message) {
