@@ -128,7 +128,23 @@ async function handleUserExtract() {
 
 // Afficher les vidéos d'un créateur
 function displayUserVideos(data) {
-    userTitleDiv.textContent = `@${data.username}`;
+    // Afficher les infos du créateur si disponibles
+    if (data.creator) {
+        const creator = data.creator;
+        userTitleDiv.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 12px;">
+                ${creator.avatar ? `<img src="${creator.avatar}" alt="Avatar" style="width: 48px; height: 48px; border-radius: 50%; border: 2px solid #fe2c55;">` : ''}
+                <div>
+                    <div style="font-size: 20px; font-weight: bold;">@${creator.uniqueId}</div>
+                    ${creator.nickname ? `<div style="font-size: 14px; color: #999;">${escapeHtml(creator.nickname)} ${creator.verified ? '✓' : ''}</div>` : ''}
+                    ${creator.followers ? `<div style="font-size: 12px; color: #25f4ee; margin-top: 4px;">${formatNumber(creator.followers)} abonnés · ${formatNumber(creator.totalVideos)} vidéos</div>` : ''}
+                </div>
+            </div>
+        `;
+    } else {
+        userTitleDiv.textContent = `@${data.username}`;
+    }
+    
     videoCountDiv.textContent = `${data.count} vidéo${data.count > 1 ? 's' : ''} trouvée${data.count > 1 ? 's' : ''}`;
     
     if (data.count === 0) {
@@ -136,6 +152,7 @@ function displayUserVideos(data) {
             <div style="text-align: center; padding: 40px; color: #999; grid-column: 1/-1;">
                 <p style="font-size: 18px; margin-bottom: 10px;">🔍 Aucune vidéo trouvée</p>
                 <p style="font-size: 14px;">Vérifiez que le nom d'utilisateur est correct ou que le compte est public.</p>
+                ${data.creator ? '<p style="font-size: 13px; color: #666; margin-top: 10px;">Le compte existe mais aucune vidéo publique n\'est disponible.</p>' : ''}
                 ${data.demo ? '<p style="margin-top: 15px; color: #fe2c55;">⚠️ Mode démo - Configurez RapidAPI pour voir les vraies vidéos</p>' : ''}
             </div>
         `;

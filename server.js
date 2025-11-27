@@ -148,8 +148,50 @@ app.post('/api/extract-user', async (req, res) => {
                 // Essayer différents endpoints selon l'API RapidAPI utilisée
                 let apiData;
                 let endpoint;
+                let userInfo = null;
+                
+                // D'abord essayer de récupérer les infos du créateur
+                const userEndpoints = [
+                    {
+                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/userInfo`,
+                        params: { username: cleanUsername }
+                    },
+                    {
+                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/user/info`,
+                        params: { username: cleanUsername }
+                    },
+                    {
+                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/api/user`,
+                        params: { uniqueId: cleanUsername }
+                    }
+                ];
+                
+                // Essayer de récupérer les infos utilisateur (non-bloquant)
+                for (const ep of userEndpoints) {
+                    try {
+                        const options = {
+                            method: 'GET',
+                            url: ep.url,
+                            params: ep.params,
+                            headers: {
+                                'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+                                'X-RapidAPI-Host': process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'
+                            },
+                            timeout: 10000
+                        };
+                        const response = await axios.request(options);
+                        userInfo = response.data?.data?.user || response.data?.user || response.data;
+                        console.log(`✓ Infos utilisateur récupérées:`, userInfo?.unique_id || userInfo?.id);
+                        break;
+                    } catch (error) {
+                        console.log(`✗ Endpoint user info échoué: ${ep.url}`);
+                        continue;
+                    }
+                }
                 
                 // Liste des endpoints possibles pour différentes APIs TikTok
+                // Utiliser sec_uid ou id si disponible, sinon username
+                const userId = userInfo?.sec_uid || userInfo?.id || cleanUsername;
                 const endpoints = [
                     {
                         url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/getUserVideos`,
@@ -160,8 +202,16 @@ app.post('/api/extract-user', async (req, res) => {
                         params: { username: cleanUsername, limit: 30 }
                     },
                     {
+                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/user/posts`,
+                        params: { secUid: userId, count: 30 }
+                    },
+                    {
                         url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/api/user/posts`,
                         params: { username: cleanUsername }
+                    },
+                    {
+                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/feed/user_posts`,
+                        params: { unique_id: cleanUsername, count: 30 }
                     }
                 ];
 
@@ -218,7 +268,18 @@ app.post('/api/extract-user', async (req, res) => {
                     success: true,
                     username: cleanUsername,
                     count: formattedVideos.length,
-                    videos: formattedVideos
+                    videos: formattedVideos,
+                    creator: userInfo ? {
+                        id: userInfo.id || userInfo.sec_uid,
+                        uniqueId: userInfo.unique_id || userInfo.uniqueId || cleanUsername,
+                        nickname: userInfo.nickname || userInfo.nick_name,
+                        avatar: userInfo.avatar || userInfo.avatarThumb,
+                        signature: userInfo.signature || userInfo.bio,
+                        verified: userInfo.verified || false,
+                        followers: userInfo.followerCount || userInfo.followers || 0,
+                        following: userInfo.followingCount || userInfo.following || 0,
+                        totalVideos: userInfo.videoCount || userInfo.video_count || formattedVideos.length
+                    } : null
                 });
 
             } catch (apiError) {
@@ -265,6 +326,17 @@ app.post('/api/extract-user', async (req, res) => {
                 username: cleanUsername,
                 count: demoVideos.length,
                 videos: demoVideos,
+                creator: {
+                    id: 'demo_id',
+                    uniqueId: cleanUsername,
+                    nickname: `Créateur Démo`,
+                    avatar: `https://via.placeholder.com/96x96?text=${cleanUsername[0].toUpperCase()}`,
+                    signature: 'Compte de démonstration - Configurez RapidAPI pour voir le vrai profil',
+                    verified: false,
+                    followers: Math.floor(Math.random() * 100000),
+                    following: Math.floor(Math.random() * 1000),
+                    totalVideos: demoVideos.length
+                },
                 demo: true
             });
         }
