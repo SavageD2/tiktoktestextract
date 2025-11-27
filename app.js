@@ -131,28 +131,39 @@ function displayUserVideos(data) {
     userTitleDiv.textContent = `@${data.username}`;
     videoCountDiv.textContent = `${data.count} vidéo${data.count > 1 ? 's' : ''} trouvée${data.count > 1 ? 's' : ''}`;
     
-    videoGridDiv.innerHTML = data.videos.map(video => `
-        <div class="video-card" onclick="window.open('${video.url}', '_blank')">
-            <img src="${video.thumbnail || 'https://via.placeholder.com/300x400?text=TikTok'}" 
-                 alt="${escapeHtml(video.title)}" 
-                 class="video-thumbnail"
-                 onerror="this.src='https://via.placeholder.com/300x400?text=TikTok'">
-            <div class="video-info-card">
-                <div class="video-title">${escapeHtml(video.title)}</div>
-                <div class="video-stats">
-                    <span class="video-stat">❤️ ${formatNumber(video.likes)}</span>
-                    <span class="video-stat">💬 ${formatNumber(video.comments)}</span>
-                    <span class="video-stat">🔄 ${formatNumber(video.shares)}</span>
-                </div>
-                ${video.downloadUrl ? `
-                    <button class="video-download-btn" onclick="event.stopPropagation(); window.open('${video.downloadUrl}', '_blank')">
-                        📥 Télécharger
-                    </button>
-                ` : ''}
+    if (data.count === 0) {
+        videoGridDiv.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #999; grid-column: 1/-1;">
+                <p style="font-size: 18px; margin-bottom: 10px;">🔍 Aucune vidéo trouvée</p>
+                <p style="font-size: 14px;">Vérifiez que le nom d'utilisateur est correct ou que le compte est public.</p>
+                ${data.demo ? '<p style="margin-top: 15px; color: #fe2c55;">⚠️ Mode démo - Configurez RapidAPI pour voir les vraies vidéos</p>' : ''}
             </div>
-        </div>
-    `).join('');
+        `;
+    } else {
+        videoGridDiv.innerHTML = data.videos.map(video => `
+            <div class="video-card" onclick="window.open('${video.url}', '_blank')">
+                <img src="${video.thumbnail || 'https://via.placeholder.com/300x400?text=TikTok'}" 
+                     alt="${escapeHtml(video.title)}" 
+                     class="video-thumbnail"
+                     onerror="this.src='https://via.placeholder.com/300x400?text=TikTok'">
+                <div class="video-info-card">
+                    <div class="video-title">${escapeHtml(video.title)}</div>
+                    <div class="video-stats">
+                        <span class="video-stat">❤️ ${formatNumber(video.likes)}</span>
+                        <span class="video-stat">💬 ${formatNumber(video.comments)}</span>
+                        <span class="video-stat">🔄 ${formatNumber(video.shares)}</span>
+                    </div>
+                    ${video.downloadUrl ? `
+                        <button class="video-download-btn" onclick="event.stopPropagation(); window.open('${video.downloadUrl}', '_blank')">
+                            📥 Télécharger
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
     
+    hideResult(); // Masquer le résultat de vidéo unique
     showUserResults();
 }
 
