@@ -29,10 +29,16 @@ app.get('/terms', (req, res) => {
     res.sendFile(path.join(__dirname, 'terms.html'));
 });
 
-// Route pour la vérification TikTok (fichier prefix)
+// Route pour la vérification TikTok (fichier prefix 1)
 app.get('/tiktokbngmKt14oERoWad8foVPMkNIBAP5LMlr.txt', (req, res) => {
     res.type('text/plain');
     res.send('tiktok-developers-site-verification=bngmKt14oERoWad8foVPMkNIBAP5LMlr');
+});
+
+// Route pour la vérification TikTok (fichier prefix 2 - vidgrasp.xyz)
+app.get('/tiktokHeAB0yIckVmtuBsDvJ0a2c34KJD5QgAs.txt', (req, res) => {
+    res.type('text/plain');
+    res.send('tiktok-developers-site-verification=HeAB0yIckVmtuBsDvJ0a2c34KJD5QgAs');
 });
 
 // Route pour la vérification TikTok DNS (si nécessaire)
