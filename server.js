@@ -145,22 +145,56 @@ app.post('/api/extract-user', async (req, res) => {
 
         if (process.env.RAPIDAPI_KEY) {
             try {
-                const options = {
-                    method: 'GET',
-                    url: 'https://tiktok-download-video1.p.rapidapi.com/getUserVideos',
-                    params: { 
-                        username: cleanUsername,
-                        count: 30 // Nombre de vidéos à récupérer
+                // Essayer différents endpoints selon l'API RapidAPI utilisée
+                let apiData;
+                let endpoint;
+                
+                // Liste des endpoints possibles pour différentes APIs TikTok
+                const endpoints = [
+                    {
+                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/getUserVideos`,
+                        params: { username: cleanUsername, count: 30 }
                     },
-                    headers: {
-                        'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-                        'X-RapidAPI-Host': process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'
+                    {
+                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/user/posts`,
+                        params: { username: cleanUsername, limit: 30 }
                     },
-                    timeout: 15000
-                };
+                    {
+                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/api/user/posts`,
+                        params: { username: cleanUsername }
+                    }
+                ];
 
-                const response = await axios.request(options);
-                const apiData = response.data;
+                // Essayer chaque endpoint jusqu'à ce qu'un fonctionne
+                let lastError;
+                for (const ep of endpoints) {
+                    try {
+                        const options = {
+                            method: 'GET',
+                            url: ep.url,
+                            params: ep.params,
+                            headers: {
+                                'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
+                                'X-RapidAPI-Host': process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'
+                            },
+                            timeout: 15000
+                        };
+
+                        const response = await axios.request(options);
+                        apiData = response.data;
+                        endpoint = ep.url;
+                        console.log(`✓ Endpoint fonctionnel: ${endpoint}`);
+                        break;
+                    } catch (error) {
+                        lastError = error;
+                        console.log(`✗ Endpoint échoué: ${ep.url} - ${error.response?.status || error.message}`);
+                        continue;
+                    }
+                }
+
+                if (!apiData) {
+                    throw new Error(`Aucun endpoint API disponible. L'API que vous utilisez ne supporte peut-être pas l'extraction par utilisateur. Dernière erreur: ${lastError.message}`);
+                }
                 
                 // Adapter la réponse selon le format de l'API
                 const videos = apiData.data?.videos || apiData.videos || [];
@@ -189,9 +223,25 @@ app.post('/api/extract-user', async (req, res) => {
 
             } catch (apiError) {
                 console.error('Erreur RapidAPI User:', apiError.message);
+                
+                // Message d'erreur plus informatif
+                let errorMessage = 'Erreur lors de la récupération des vidéos';
+                
+                if (apiError.response?.status === 404) {
+                    errorMessage = 'L\'API RapidAPI que vous utilisez ne supporte pas l\'extraction par utilisateur. Essayez l\'extraction par URL unique ou changez d\'API RapidAPI.';
+                } else if (apiError.response?.status === 403) {
+                    errorMessage = 'Clé API invalide ou quota dépassé. Vérifiez votre abonnement RapidAPI.';
+                } else if (apiError.response?.status === 429) {
+                    errorMessage = 'Limite de requêtes atteinte. Attendez quelques minutes ou upgradez votre plan RapidAPI.';
+                } else if (apiError.message.includes('Aucun endpoint')) {
+                    errorMessage = apiError.message;
+                }
+                
                 res.status(500).json({
                     success: false,
-                    error: 'Erreur lors de la récupération des vidéos: ' + apiError.message
+                    error: errorMessage,
+                    details: apiError.response?.data || apiError.message,
+                    suggestion: 'Utilisez l\'extraction par URL unique qui fonctionne avec toutes les APIs TikTok'
                 });
             }
         } else {

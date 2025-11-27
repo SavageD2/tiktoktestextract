@@ -100,14 +100,26 @@ async function handleUserExtract() {
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-            throw new Error(data.error || 'Erreur lors de l\'extraction');
+            // Message d'erreur détaillé avec suggestion
+            let errorMsg = data.error || 'Erreur lors de l\'extraction';
+            if (data.suggestion) {
+                errorMsg += '\n\n💡 ' + data.suggestion;
+            }
+            throw new Error(errorMsg);
         }
 
         displayUserVideos(data);
 
     } catch (error) {
         console.error('Erreur:', error);
-        showError(error.message || 'Une erreur est survenue lors de l\'extraction');
+        
+        // Afficher un message d'erreur formaté
+        let displayError = error.message;
+        if (error.message.includes('ne supporte pas')) {
+            displayError = '⚠️ Fonctionnalité non disponible\n\n' + error.message;
+        }
+        
+        showError(displayError);
     } finally {
         isExtracting = false;
         hideLoading();
