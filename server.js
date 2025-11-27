@@ -29,6 +29,12 @@ app.get('/terms', (req, res) => {
     res.sendFile(path.join(__dirname, 'terms.html'));
 });
 
+// Route pour la vérification TikTok
+app.get('/tiktokbngmKt14oERoWad8foVPMkNIBAP5LMlr.txt', (req, res) => {
+    res.type('text/plain');
+    res.send('tiktok-developers-site-verification=bngmKt14oERoWad8foVPMkNIBAP5LMlr');
+});
+
 // API pour extraire les informations d'une vidéo TikTok
 app.post('/api/extract', async (req, res) => {
     try {
