@@ -2,36 +2,30 @@
   "version": 2,
   "builds": [
     {
-      "src": "*.js",
+      "src": "server.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "*.css",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "*.html",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
-    {
-      "src": "/app.js",
-      "headers": { "Content-Type": "application/javascript; charset=utf-8" },
-      "dest": "/app.js"
-    },
-    {
-      "src": "/styles.css",
-      "headers": { "Content-Type": "text/css; charset=utf-8" },
-      "dest": "/styles.css"
-    },
     {
       "src": "/api/(.*)",
       "dest": "/server.js"
     },
     {
-      "src": "/(.*\\.(html|png|jpg|jpeg|gif|svg|ico|json|txt))",
-      "dest": "/$1"
+      "src": "/auth/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/(privacy|terms|data-deletion)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/tiktok.*\\.txt",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/\\.well-known/(.*)",
+      "dest": "/server.js"
     },
     {
       "src": "/(.*)",

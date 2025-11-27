@@ -10,7 +10,28 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+
+// Servir les fichiers statiques avec les bons MIME types
+app.get('/app.js', (req, res) => {
+    res.type('application/javascript');
+    res.sendFile(path.join(__dirname, 'app.js'));
+});
+
+app.get('/styles.css', (req, res) => {
+    res.type('text/css');
+    res.sendFile(path.join(__dirname, 'styles.css'));
+});
+
+// Autres fichiers statiques
+app.use(express.static(path.join(__dirname), {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.js')) {
+            res.setHeader('Content-Type', 'application/javascript');
+        } else if (filePath.endsWith('.css')) {
+            res.setHeader('Content-Type', 'text/css');
+        }
+    }
+}));
 
 // Stocker l'historique en mémoire (en production, utilisez une base de données)
 let extractionHistory = [];
