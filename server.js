@@ -29,10 +29,16 @@ app.get('/terms', (req, res) => {
     res.sendFile(path.join(__dirname, 'terms.html'));
 });
 
-// Route pour la vérification TikTok
+// Route pour la vérification TikTok (fichier prefix)
 app.get('/tiktokbngmKt14oERoWad8foVPMkNIBAP5LMlr.txt', (req, res) => {
     res.type('text/plain');
     res.send('tiktok-developers-site-verification=bngmKt14oERoWad8foVPMkNIBAP5LMlr');
+});
+
+// Route pour la vérification TikTok DNS (si nécessaire)
+app.get('/.well-known/tiktok-developers-site-verification', (req, res) => {
+    res.type('text/plain');
+    res.send('tiktok-developers-site-verification=W2FaR8AQaqRSVsma7RbJ3V58aN9PnEhX');
 });
 
 // API pour extraire les informations d'une vidéo TikTok
