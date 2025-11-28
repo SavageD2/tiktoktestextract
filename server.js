@@ -290,12 +290,16 @@ app.post('/api/extract-user', async (req, res) => {
             }
         } else {
             // Mode démo
+            // Utiliser des data URIs pour éviter les problèmes avec via.placeholder
+            const placeholderImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="400"%3E%3Crect width="300" height="400" fill="%231e1e1e"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="20" fill="%23fe2c55"%3ETikTok Vidéo%3C/text%3E%3C/svg%3E';
+            const avatarPlaceholder = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96"%3E%3Ccircle cx="48" cy="48" r="48" fill="%23fe2c55"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="40" fill="white"%3E' + (cleanUsername[0] || 'U').toUpperCase() + '%3C/text%3E%3C/svg%3E';
+            
             const demoVideos = Array.from({ length: 5 }, (_, i) => ({
                 videoId: `demo_${Date.now()}_${i}`,
                 url: `https://www.tiktok.com/@${cleanUsername}/video/demo${i}`,
                 title: `Vidéo démo ${i + 1}`,
                 description: 'Configurez RAPIDAPI_KEY pour voir les vraies vidéos',
-                thumbnail: `https://via.placeholder.com/300x400?text=Video+${i + 1}`,
+                thumbnail: placeholderImage,
                 downloadUrl: null,
                 duration: '00:30',
                 likes: Math.floor(Math.random() * 10000),
@@ -313,7 +317,7 @@ app.post('/api/extract-user', async (req, res) => {
                     id: 'demo_id',
                     uniqueId: cleanUsername,
                     nickname: `Créateur Démo`,
-                    avatar: `https://via.placeholder.com/96x96?text=${cleanUsername[0].toUpperCase()}`,
+                    avatar: avatarPlaceholder,
                     signature: 'Compte de démonstration - Configurez RapidAPI pour voir le vrai profil',
                     verified: false,
                     followers: Math.floor(Math.random() * 100000),
@@ -394,6 +398,7 @@ app.post('/api/extract', async (req, res) => {
                 console.error('Erreur RapidAPI:', apiError.message);
                 // Fallback vers données simulées si l'API échoue
                 const fallbackVideoId = extractVideoId(url) || 'temp_' + Date.now();
+                const placeholderImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="400"%3E%3Crect width="300" height="400" fill="%231e1e1e"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="20" fill="%23fe2c55"%3ETikTok%3C/text%3E%3C/svg%3E';
                 videoData = {
                     success: true,
                     videoId: fallbackVideoId,
@@ -402,7 +407,7 @@ app.post('/api/extract', async (req, res) => {
                     author: '@utilisateur',
                     description: 'Description de la vidéo (mode démo - erreur API)',
                     downloadUrl: null,
-                    thumbnail: 'https://via.placeholder.com/300x400?text=TikTok+Video',
+                    thumbnail: placeholderImage,
                     duration: '00:30',
                     likes: '1.2K',
                     comments: '45',
@@ -414,6 +419,7 @@ app.post('/api/extract', async (req, res) => {
         } else {
             // Mode démo sans clé API
             const demoVideoId = extractVideoId(url) || 'demo_' + Date.now();
+            const placeholderImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="400"%3E%3Crect width="300" height="400" fill="%231e1e1e"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="20" fill="%23fe2c55"%3ETikTok%3C/text%3E%3C/svg%3E';
             videoData = {
                 success: true,
                 videoId: demoVideoId,
@@ -422,7 +428,7 @@ app.post('/api/extract', async (req, res) => {
                 author: '@utilisateur',
                 description: 'Configurez RAPIDAPI_KEY dans .env pour utiliser l\'API réelle',
                 downloadUrl: null,
-                thumbnail: 'https://via.placeholder.com/300x400?text=TikTok+Video',
+                thumbnail: placeholderImage,
                 duration: '00:30',
                 likes: '1.2K',
                 comments: '45',

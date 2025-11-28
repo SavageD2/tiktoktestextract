@@ -157,12 +157,14 @@ function displayUserVideos(data) {
             </div>
         `;
     } else {
+        const placeholderImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="400"%3E%3Crect width="300" height="400" fill="%231e1e1e"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="20" fill="%23fe2c55"%3ETikTok%3C/text%3E%3C/svg%3E';
+        
         videoGridDiv.innerHTML = data.videos.map(video => `
             <div class="video-card" onclick="window.open('${video.url}', '_blank')">
-                <img src="${video.thumbnail || 'https://via.placeholder.com/300x400?text=TikTok'}" 
+                <img src="${video.thumbnail || placeholderImage}" 
                      alt="${escapeHtml(video.title)}" 
                      class="video-thumbnail"
-                     onerror="this.src='https://via.placeholder.com/300x400?text=TikTok'">
+                     onerror="this.src='${placeholderImage}'">
                 <div class="video-info-card">
                     <div class="video-title">${escapeHtml(video.title)}</div>
                     <div class="video-stats">
