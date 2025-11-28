@@ -172,6 +172,7 @@ app.post('/api/extract-user', async (req, res) => {
                             timeout: 10000
                         };
                         const response = await axios.request(options);
+                        console.log('📥 Réponse user/info:', JSON.stringify(response.data, null, 2));
                         userInfo = response.data?.data?.user || response.data?.user || response.data;
                         console.log(`✓ Infos utilisateur récupérées:`, userInfo?.unique_id || userInfo?.id);
                         break;
@@ -214,6 +215,7 @@ app.post('/api/extract-user', async (req, res) => {
                         };
 
                         const response = await axios.request(options);
+                        console.log('📥 Réponse user/posts:', JSON.stringify(response.data, null, 2));
                         apiData = response.data;
                         endpoint = ep.url;
                         console.log(`✓ Endpoint fonctionnel: ${endpoint}`);
@@ -231,6 +233,10 @@ app.post('/api/extract-user', async (req, res) => {
                 
                 // Adapter la réponse selon le format de l'API
                 const videos = apiData.data?.videos || apiData.videos || apiData.data?.aweme_list || [];
+                console.log(`📊 Nombre de vidéos extraites: ${videos.length}`);
+                if (videos.length > 0) {
+                    console.log('📹 Exemple de vidéo:', JSON.stringify(videos[0], null, 2));
+                }
                 
                 const formattedVideos = videos.map(video => ({
                     videoId: video.aweme_id || video.video_id || video.id,
@@ -247,6 +253,11 @@ app.post('/api/extract-user', async (req, res) => {
                     createTime: video.create_time || video.createTime
                 }));
 
+                console.log(`✅ Envoi de ${formattedVideos.length} vidéos formatées`);
+                if (formattedVideos.length > 0) {
+                    console.log('📤 Exemple vidéo formatée:', JSON.stringify(formattedVideos[0], null, 2));
+                }
+                
                 res.json({
                     success: true,
                     username: cleanUsername,
