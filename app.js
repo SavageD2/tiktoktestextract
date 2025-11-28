@@ -161,7 +161,7 @@ function displayUserVideos(data) {
         
         videoGridDiv.innerHTML = data.videos.map(video => `
             <div class="video-card">
-                <div style="position: relative;" onclick="${video.downloadUrl ? `window.open('${video.downloadUrl}', '_blank')` : 'alert("Vid\u00e9o non disponible")'}">">
+                <div style="position: relative; cursor: pointer;" onclick="${video.downloadUrl ? `window.open('${video.downloadUrl}', '_blank')` : 'alert(\'Vidéo non disponible\')'}">
                     <img src="${video.thumbnail || placeholderImage}" 
                          alt="${escapeHtml(video.title)}" 
                          class="video-thumbnail"
