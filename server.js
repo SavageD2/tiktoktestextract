@@ -380,20 +380,26 @@ app.post('/api/extract', async (req, res) => {
             try {
                 const options = {
                     method: 'GET',
-                    url: 'https://tiktok-download-video1.p.rapidapi.com/getVideo',
-                    params: { url: url },
+                    url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-video-no-watermark2.p.rapidapi.com'}/`,
+                    params: { 
+                        url: url,
+                        hd: 1 
+                    },
                     headers: {
                         'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
-                        'X-RapidAPI-Host': process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'
+                        'X-RapidAPI-Host': process.env.RAPIDAPI_HOST || 'tiktok-video-no-watermark2.p.rapidapi.com'
                     },
                     timeout: 10000
                 };
 
+                console.log('📤 Requête extraction vidéo:', url);
                 const response = await axios.request(options);
                 const apiData = response.data;
+                console.log('📥 Réponse extraction vidéo:', JSON.stringify(apiData, null, 2));
                 
                 // Extraire l'ID après résolution par l'API
                 const resolvedVideoId = apiData.data?.id || 
+                                       apiData.data?.aweme_id ||
                                        apiData.id || 
                                        extractVideoId(apiData.data?.video_url || url) || 
                                        'unknown';
@@ -403,15 +409,16 @@ app.post('/api/extract', async (req, res) => {
                     success: true,
                     videoId: resolvedVideoId,
                     url: apiData.data?.video_url || url,
-                    title: apiData.data?.title || apiData.title || 'Vidéo TikTok',
-                    author: apiData.data?.author?.nickname || apiData.author || '@utilisateur',
+                    title: apiData.data?.title || apiData.data?.desc || apiData.title || 'Vidéo TikTok',
+                    author: apiData.data?.author?.nickname || apiData.data?.author?.unique_id || apiData.author || '@utilisateur',
                     description: apiData.data?.desc || apiData.description || 'Description non disponible',
-                    downloadUrl: apiData.data?.play || apiData.videoUrl || apiData.download_url,
-                    thumbnail: apiData.data?.cover || apiData.thumbnail || apiData.cover,
+                    downloadUrl: apiData.data?.play || apiData.data?.download_url || apiData.videoUrl || apiData.download_url,
+                    thumbnail: apiData.data?.cover || apiData.data?.origin_cover || apiData.thumbnail || apiData.cover,
                     duration: apiData.data?.duration || apiData.duration || 'N/A',
-                    likes: apiData.data?.digg_count || apiData.likes || '0',
-                    comments: apiData.data?.comment_count || apiData.comments || '0',
-                    shares: apiData.data?.share_count || apiData.shares || '0',
+                    likes: apiData.data?.digg_count || apiData.data?.statistics?.digg_count || apiData.likes || '0',
+                    comments: apiData.data?.comment_count || apiData.data?.statistics?.comment_count || apiData.comments || '0',
+                    shares: apiData.data?.share_count || apiData.data?.statistics?.share_count || apiData.shares || '0',
+                    views: apiData.data?.play_count || apiData.data?.statistics?.play_count || apiData.views || '0',
                     timestamp: new Date().toISOString()
                 };
             } catch (apiError) {
