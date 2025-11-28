@@ -153,16 +153,8 @@ app.post('/api/extract-user', async (req, res) => {
                 // D'abord essayer de récupérer les infos du créateur
                 const userEndpoints = [
                     {
-                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/userInfo`,
-                        params: { username: cleanUsername }
-                    },
-                    {
-                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/user/info`,
-                        params: { username: cleanUsername }
-                    },
-                    {
-                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/api/user`,
-                        params: { uniqueId: cleanUsername }
+                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-video-no-watermark2.p.rapidapi.com'}/user/info`,
+                        params: { unique_id: cleanUsername.startsWith('@') ? cleanUsername : `@${cleanUsername}` }
                     }
                 ];
                 
@@ -190,28 +182,19 @@ app.post('/api/extract-user', async (req, res) => {
                 }
                 
                 // Liste des endpoints possibles pour différentes APIs TikTok
-                // Utiliser sec_uid ou id si disponible, sinon username
-                const userId = userInfo?.sec_uid || userInfo?.id || cleanUsername;
+                // Utiliser user_id si disponible depuis userInfo
+                const userId = userInfo?.user_id || userInfo?.uid || '';
+                const uniqueId = cleanUsername.startsWith('@') ? cleanUsername : `@${cleanUsername}`;
+                
                 const endpoints = [
                     {
-                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/getUserVideos`,
-                        params: { username: cleanUsername, count: 30 }
-                    },
-                    {
-                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/user/posts`,
-                        params: { username: cleanUsername, limit: 30 }
-                    },
-                    {
-                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/user/posts`,
-                        params: { secUid: userId, count: 30 }
-                    },
-                    {
-                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/api/user/posts`,
-                        params: { username: cleanUsername }
-                    },
-                    {
-                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-download-video1.p.rapidapi.com'}/feed/user_posts`,
-                        params: { unique_id: cleanUsername, count: 30 }
+                        url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-video-no-watermark2.p.rapidapi.com'}/user/posts`,
+                        params: { 
+                            unique_id: uniqueId,
+                            ...(userId && { user_id: userId }),
+                            count: 30,
+                            cursor: 0
+                        }
                     }
                 ];
 
@@ -247,21 +230,21 @@ app.post('/api/extract-user', async (req, res) => {
                 }
                 
                 // Adapter la réponse selon le format de l'API
-                const videos = apiData.data?.videos || apiData.videos || [];
+                const videos = apiData.data?.videos || apiData.videos || apiData.data?.aweme_list || [];
                 
                 const formattedVideos = videos.map(video => ({
-                    videoId: video.video_id || video.id,
-                    url: video.video_url || `https://www.tiktok.com/@${cleanUsername}/video/${video.video_id}`,
-                    title: video.title || video.desc || 'Sans titre',
+                    videoId: video.aweme_id || video.video_id || video.id,
+                    url: video.video_url || `https://www.tiktok.com/@${cleanUsername}/video/${video.aweme_id || video.video_id}`,
+                    title: video.desc || video.title || 'Sans titre',
                     description: video.desc || video.description || '',
-                    thumbnail: video.cover || video.thumbnail,
-                    downloadUrl: video.play || video.download_url,
-                    duration: video.duration,
-                    likes: video.digg_count || video.likes || 0,
-                    comments: video.comment_count || video.comments || 0,
-                    shares: video.share_count || video.shares || 0,
-                    views: video.play_count || video.views || 0,
-                    createTime: video.create_time
+                    thumbnail: video.video?.cover || video.cover || video.thumbnail,
+                    downloadUrl: video.video?.play || video.play || video.download_url,
+                    duration: video.video?.duration || video.duration,
+                    likes: video.statistics?.digg_count || video.digg_count || video.likes || 0,
+                    comments: video.statistics?.comment_count || video.comment_count || video.comments || 0,
+                    shares: video.statistics?.share_count || video.share_count || video.shares || 0,
+                    views: video.statistics?.play_count || video.play_count || video.views || 0,
+                    createTime: video.create_time || video.createTime
                 }));
 
                 res.json({
@@ -270,15 +253,15 @@ app.post('/api/extract-user', async (req, res) => {
                     count: formattedVideos.length,
                     videos: formattedVideos,
                     creator: userInfo ? {
-                        id: userInfo.id || userInfo.sec_uid,
+                        id: userInfo.user_id || userInfo.uid || userInfo.id,
                         uniqueId: userInfo.unique_id || userInfo.uniqueId || cleanUsername,
                         nickname: userInfo.nickname || userInfo.nick_name,
-                        avatar: userInfo.avatar || userInfo.avatarThumb,
+                        avatar: userInfo.avatar_thumb || userInfo.avatar || userInfo.avatarThumb,
                         signature: userInfo.signature || userInfo.bio,
-                        verified: userInfo.verified || false,
-                        followers: userInfo.followerCount || userInfo.followers || 0,
-                        following: userInfo.followingCount || userInfo.following || 0,
-                        totalVideos: userInfo.videoCount || userInfo.video_count || formattedVideos.length
+                        verified: userInfo.custom_verify || userInfo.verified || false,
+                        followers: userInfo.follower_count || userInfo.followerCount || userInfo.followers || 0,
+                        following: userInfo.following_count || userInfo.followingCount || userInfo.following || 0,
+                        totalVideos: userInfo.aweme_count || userInfo.videoCount || userInfo.video_count || formattedVideos.length
                     } : null
                 });
 
