@@ -238,20 +238,29 @@ app.post('/api/extract-user', async (req, res) => {
                     console.log('📹 Exemple de vidéo:', JSON.stringify(videos[0], null, 2));
                 }
                 
-                const formattedVideos = videos.map(video => ({
-                    videoId: video.aweme_id || video.video_id || video.id,
-                    url: video.video_url || `https://www.tiktok.com/@${cleanUsername}/video/${video.aweme_id || video.video_id}`,
-                    title: video.desc || video.title || 'Sans titre',
-                    description: video.desc || video.description || '',
-                    thumbnail: video.video?.cover || video.cover || video.thumbnail,
-                    downloadUrl: video.video?.play || video.play || video.download_url,
-                    duration: video.video?.duration || video.duration,
-                    likes: video.statistics?.digg_count || video.digg_count || video.likes || 0,
-                    comments: video.statistics?.comment_count || video.comment_count || video.comments || 0,
-                    shares: video.statistics?.share_count || video.share_count || video.shares || 0,
-                    views: video.statistics?.play_count || video.play_count || video.views || 0,
-                    createTime: video.create_time || video.createTime
-                }));
+                const formattedVideos = videos.map(video => {
+                    const videoId = video.aweme_id || video.video_id || video.id;
+                    const author = video.author?.unique_id || video.author?.uniqueId || cleanUsername;
+                    
+                    return {
+                        videoId: videoId,
+                        // Essayer plusieurs formats d'URL
+                        url: video.share_url || 
+                             video.video_url || 
+                             video.url ||
+                             `https://www.tiktok.com/@${author}/video/${videoId}`,
+                        title: video.desc || video.title || 'Sans titre',
+                        description: video.desc || video.description || '',
+                        thumbnail: video.video?.cover || video.cover || video.thumbnail || video.video?.origin_cover,
+                        downloadUrl: video.video?.play || video.play || video.download_url || video.video?.download_addr,
+                        duration: video.video?.duration || video.duration,
+                        likes: video.statistics?.digg_count || video.digg_count || video.likes || 0,
+                        comments: video.statistics?.comment_count || video.comment_count || video.comments || 0,
+                        shares: video.statistics?.share_count || video.share_count || video.shares || 0,
+                        views: video.statistics?.play_count || video.play_count || video.views || 0,
+                        createTime: video.create_time || video.createTime
+                    };
+                });
 
                 console.log(`✅ Envoi de ${formattedVideos.length} vidéos formatées`);
                 if (formattedVideos.length > 0) {

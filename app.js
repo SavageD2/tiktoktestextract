@@ -160,17 +160,21 @@ function displayUserVideos(data) {
         const placeholderImage = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="400"%3E%3Crect width="300" height="400" fill="%231e1e1e"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="20" fill="%23fe2c55"%3ETikTok%3C/text%3E%3C/svg%3E';
         
         videoGridDiv.innerHTML = data.videos.map(video => `
-            <div class="video-card" onclick="window.open('${video.url}', '_blank')">
-                <img src="${video.thumbnail || placeholderImage}" 
-                     alt="${escapeHtml(video.title)}" 
-                     class="video-thumbnail"
-                     onerror="this.src='${placeholderImage}'">
+            <div class="video-card">
+                <div style="position: relative;" onclick="${video.downloadUrl ? `window.open('${video.downloadUrl}', '_blank')` : 'alert("Vid\u00e9o non disponible")'}">">
+                    <img src="${video.thumbnail || placeholderImage}" 
+                         alt="${escapeHtml(video.title)}" 
+                         class="video-thumbnail"
+                         onerror="this.src='${placeholderImage}'">
+                    ${video.downloadUrl ? '<div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 5px; font-size: 12px;">▶️ Lecture</div>' : ''}
+                </div>
                 <div class="video-info-card">
                     <div class="video-title">${escapeHtml(video.title)}</div>
                     <div class="video-stats">
                         <span class="video-stat">❤️ ${formatNumber(video.likes)}</span>
                         <span class="video-stat">💬 ${formatNumber(video.comments)}</span>
                         <span class="video-stat">🔄 ${formatNumber(video.shares)}</span>
+                        ${video.views ? `<span class="video-stat">👁️ ${formatNumber(video.views)}</span>` : ''}
                     </div>
                     ${video.downloadUrl ? `
                         <button class="video-download-btn" onclick="event.stopPropagation(); window.open('${video.downloadUrl}', '_blank')">
