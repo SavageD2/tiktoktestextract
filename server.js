@@ -378,21 +378,23 @@ app.post('/api/extract', async (req, res) => {
         if (process.env.RAPIDAPI_KEY) {
             // Appel à RapidAPI
             try {
+                // Pour l'API TikTok video no watermark2, on utilise GET avec paramètres
                 const options = {
                     method: 'GET',
                     url: `https://${process.env.RAPIDAPI_HOST || 'tiktok-video-no-watermark2.p.rapidapi.com'}/`,
                     params: { 
                         url: url,
-                        hd: 1 
+                        hd: '1'
                     },
                     headers: {
                         'X-RapidAPI-Key': process.env.RAPIDAPI_KEY,
                         'X-RapidAPI-Host': process.env.RAPIDAPI_HOST || 'tiktok-video-no-watermark2.p.rapidapi.com'
                     },
-                    timeout: 10000
+                    timeout: 15000
                 };
 
-                console.log('📤 Requête extraction vidéo:', url);
+                console.log('📤 Requête extraction vidéo:', options.url);
+                console.log('📤 Params:', options.params);
                 const response = await axios.request(options);
                 const apiData = response.data;
                 console.log('📥 Réponse extraction vidéo:', JSON.stringify(apiData, null, 2));
